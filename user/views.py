@@ -6,4 +6,5 @@ from rest_framework import status
 class ReturnMessage(APIView):
 
     def get(self, request: Request):
-        return Response({"message": "Hello world, from django drf app on docker!."}, status=status.HTTP_400_BAD_REQUEST)
+        response = {"message": "Hello world, from django drf app on docker!."}
+        return Response(response, status=status.HTTP_200_OK)
