@@ -1,23 +1,21 @@
-FROM python:3.8.12-alpine3.15
+# Use an official Python runtime as a parent image
+FROM python:3.8
 
-ADD ./requirements.txt /app/requirements.txt
+# Set environment variables for Python and Docker
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-RUN set -ex \
-    && apk add --no-cache --virtual .build-deps build-base \
-    && python -m venv /env \
-    && /env/bin/pip install --upgrade pip \
-    && /env/bin/pip install --no-cache-dir -r /app/requirements.txt \
-    && runDeps="$(scanelf --needed --nobanner --recursive /env \
-        | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
-        | sort -u \
-        | xargs -r apk info --installed \
-        | sort -u)" \
-    && apk add --virtual rundeps $runDeps \
-    && apk del .build-deps
-
-ADD . /app
+# Set the working directory in the container
 WORKDIR /app
 
-ENV PATH /env/bin:$PATH
+# Copy the current directory contents into the container at /app
+COPY . /app
 
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Expose the port that Gunicorn will run on
 EXPOSE 8000
+
+# Command to run your application using Gunicorn
+CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]
